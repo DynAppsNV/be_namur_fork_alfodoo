@@ -40,8 +40,8 @@ class CmisBackend(models.Model):
     )
     folder_name_conflict_handler = fields.Selection(
         selection=[
-            ("error", _("Raise exception")),
-            ("increment", _('Create as "name_(X)"')),
+            ("error", "Raise exception"),
+            ("increment", 'Create as "name_(X)"'),
         ],
         string="Strategy in case of duplicate",
         required=True,

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
 
-    <t t-name="cmis_web.CmisTable" owl="1">
+    <t t-name="cmis_web.CmisTable">
         <div
             class="o_list_renderer o_renderer table-responsive"
             tabindex="-1"
@@ -91,7 +91,7 @@
         </div>
     </t>
 
-    <t t-name="cmis_web.CmisTable.Rows" owl="1">
+    <t t-name="cmis_web.CmisTable.Rows">
         <t
             t-foreach="list.cmisObjects || []"
             t-as="cmisObject"
@@ -104,7 +104,7 @@
         </tr>
     </t>
 
-    <t t-name="cmis_web.CmisTable.RecordRow" owl="1">
+    <t t-name="cmis_web.CmisTable.RecordRow">
         <tr
             class="o_data_row"
             t-att-class="getRowClass(cmisObject)"

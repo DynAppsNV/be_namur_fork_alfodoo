@@ -14,6 +14,7 @@ import {DropdownItem} from "@web/core/dropdown/dropdown_item";
 import {cmisTableProps} from "../cmis_table/cmis_table";
 import {registry} from "@web/core/registry";
 import {useService} from "@web/core/utils/hooks";
+import {CmisFolderField} from "../cmis_folder/cmis_folder";
 
 const {Component} = owl;
 
@@ -55,4 +56,8 @@ CmisActions.props = {
     cmisFolderObjects: {type: Array, element: CmisObjectWrapper},
 };
 
-registry.category("view_widgets").add("cmis_actions", CmisActions);
+export const CmisActionsComponent = {
+    component: CmisActions,
+};
+
+registry.category("view_widgets").add("cmis_actions", CmisActionsComponent);

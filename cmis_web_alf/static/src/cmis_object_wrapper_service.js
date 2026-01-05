@@ -10,7 +10,7 @@
 import {CmisObjectWrapper} from "@cmis_web/cmis_object_wrapper_service";
 import {patch} from "@web/core/utils/patch";
 
-patch(CmisObjectWrapper.prototype, "alfresco_preview_url", {
+patch(CmisObjectWrapper.prototype, {
     setup(cmisObject, cmisSession, params) {
         this._super(...arguments);
         this.alfrescoApiLocation = params.alfrescoApiLocation;

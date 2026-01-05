@@ -10,7 +10,7 @@
 import {CmisActions} from "@cmis_web/cmis_actions/cmis_actions";
 import {patch} from "@web/core/utils/patch";
 
-patch(CmisActions.prototype, "action_open_in_alfresco", {
+patch(CmisActions.prototype, {
     onClickOpenInAlf(ev) {
         ev.stopPropagation();
         this.props.openInAlf(this.props.cmisObject.objectId);

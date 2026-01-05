@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
-    <t t-name="cmis_web.UpdateDocumentContentDialog" owl="1">
+    <t t-name="cmis_web.UpdateDocumentContentDialog">
         <Dialog size="'md'" title="props.title">
             <input type="file" class="form-control" t-ref="fileInput" />
             <t t-set-slot="footer" owl="1">
