@@ -12,14 +12,16 @@
 +*/
 
 import {CheckBox} from "@web/core/checkbox/checkbox";
-import {CmisObjectCollection} from "../cmis_object_wrapper_service";
+import {CmisObjectCollection} from "../cmis_object_wrapper_service/cmis_object_wrapper_service";
 import {Dropdown} from "@web/core/dropdown/dropdown";
 import {DropdownItem} from "@web/core/dropdown/dropdown_item";
 import {Widget} from "@web/views/widgets/widget";
-
-const {Component, useState} = owl;
+import {Component, useState} from "@odoo/owl";
 
 export class CmisTable extends Component {
+    static template = "cmis_web.CmisTable";
+    static components = {DropdownItem, CheckBox, Dropdown, Widget};
+
     setup() {
         this.allColumns = this.getAllColumns();
         this.state = useState({
@@ -242,11 +244,8 @@ export class CmisTable extends Component {
     }
 }
 
-CmisTable.template = "cmis_web.CmisTable";
 CmisTable.rowsTemplate = "cmis_web.CmisTable.Rows";
 CmisTable.recordRowTemplate = "cmis_web.CmisTable.RecordRow";
-
-CmisTable.components = {DropdownItem, CheckBox, Dropdown, Widget};
 
 export const cmisTableProps = {
     list: [CmisObjectCollection, Array],

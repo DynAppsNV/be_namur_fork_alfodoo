@@ -8,9 +8,9 @@
 +*/
 
 import {localization} from "@web/core/l10n/localization";
-import {luxonToMomentFormat} from "@web/core/l10n/dates";
 import {registry} from "@web/core/registry";
 import {sortBy} from "@web/core/utils/arrays";
+import {formatDateTime} from "@web/core/l10n/dates";
 
 export class CmisObjectWrapper {
     constructor(cmisObject, cmisSession, params) {
@@ -65,7 +65,7 @@ export class CmisObjectWrapper {
 
     getSuccinctProperty(property, cmisObject) {
         const object = cmisObject || this.cmisObject;
-        return object.succinctProperties[property];
+        return object.succinctProperties?.[property];
     }
 
     _getCssClass() {
@@ -110,12 +110,11 @@ export class CmisObjectWrapper {
      *
      **/
     fNameClass() {
-        var cls = this._getCssClass();
-        return cls;
+        return this._getCssClass();
     }
 
     /** FLastModificationDate
-     * @returns the cmis:mastModificationDate formatted to be rendered in ta datatable cell
+     * @returns the cmis:lastModificationDate formatted to be rendered in ta datatable cell
      *
      **/
     fLastModificationDate() {
@@ -136,14 +135,38 @@ export class CmisObjectWrapper {
     }
 
     formatCmisTimestamp(cmisTimestamp) {
-        if (cmisTimestamp) {
-            var d = new Date(cmisTimestamp);
-            var dateFormat = luxonToMomentFormat(localization.dateFormat);
-            var timeFormat = luxonToMomentFormat(localization.timeFormat);
-            var value = moment(d);
-            return value.format(dateFormat + " " + timeFormat);
+        if (!cmisTimestamp) {
+            return "";
         }
-        return "";
+
+        // Option 1: Utiliser formatDateTime d'Odoo (recommandé)
+        try {
+            return formatDateTime(cmisTimestamp);
+        } catch (e) {
+            // Fallback si formatDateTime ne fonctionne pas
+            console.warn("formatDateTime failed, using fallback", e);
+        }
+
+        // Option 2: Fallback avec formatage manuel
+        try {
+            const date = new Date(cmisTimestamp);
+            const dateFormat = localization.dateFormat || "MM/dd/yyyy";
+            const timeFormat = localization.timeFormat || "HH:mm:ss";
+
+            // Utiliser Intl.DateTimeFormat si disponible
+            const locale = localization.code || "en-US";
+            return new Intl.DateTimeFormat(locale, {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            }).format(date);
+        } catch (e) {
+            console.error("Date formatting failed", e);
+            return cmisTimestamp.toString();
+        }
     }
 
     getContentUrl() {
@@ -151,7 +174,9 @@ export class CmisObjectWrapper {
     }
 
     getPreviewUrl() {
-        var rendition = _.findWhere(this.renditions, {mimeType: "application/pdf"});
+        // Remplacer _.findWhere par find natif
+        const rendition = this.renditions?.find(r => r.mimeType === "application/pdf");
+
         if (this.mimetype === "application/pdf") {
             return this.getContentUrl();
         } else if (rendition) {
@@ -162,15 +187,11 @@ export class CmisObjectWrapper {
 
     getPreviewType() {
         if (this.baseTypeId === "cmis:folder") {
-            return undefined;
+            return;
         }
-        if (this.mimetype.match("(image)")) {
-            return "image";
-        }
-        if (this.mimetype.match("(video)")) {
-            return "video";
-        }
-        // Here we hope that alfresco is able to render the document as pdf
+        const type = this.mimetype?.split("/")[0];
+        if (type === "image") return "image";
+        if (type === "video") return "video";
         return "pdf";
     }
 }

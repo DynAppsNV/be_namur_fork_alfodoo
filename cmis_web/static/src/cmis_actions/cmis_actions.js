@@ -51,9 +51,11 @@ export class CmisActions extends Component {
 CmisActions.template = "cmis_web.CmisActions";
 CmisActions.components = {Dropdown, DropdownItem};
 CmisActions.props = {
-    ...cmisTableProps,
-    cmisObject: CmisObjectWrapper,
-    cmisFolderObjects: {type: Array, element: CmisObjectWrapper},
+    cmisObject: { type: CmisObjectWrapper },
+    cmisFolderObjects: { type: Array, element: CmisObjectWrapper },
+    renameObject: Function,
+    updateDocumentContent: Function,
+    deleteObject: Function,
 };
 
 export const CmisActionsComponent = {
