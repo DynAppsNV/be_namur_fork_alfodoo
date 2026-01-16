@@ -66,9 +66,7 @@ class CmisBackend(models.Model):
         """
         return alf_noderef.split("/")[-1]
 
-    def create_cmis_folder_from_template(
-        self, source_objectid, parent_objectid, name, title=None, description=None
-    ):
+    def create_cmis_folder_from_template(self, source_objectid, parent_objectid, name, title=None, description=None):
         """Create a new cmis folder from an alfresco space template."""
         self.ensure_one()
         payload = {
@@ -96,3 +94,13 @@ class CmisBackend(models.Model):
             name, create_if_not_found=False, cmis_parent_objectid=parent_objectid
         )
         return cmis_object.getObjectId()
+
+    def _get_current_backend(self):
+        return self.search([], limit=1)
+
+    @api.model
+    def get_cmis_repository_from_js(self):
+        """Return the default repository in the CMIS container"""
+        backend = self._get_current_backend()
+        client = backend.get_cmis_client()
+        return client.defaultRepository

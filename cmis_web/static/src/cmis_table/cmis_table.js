@@ -12,7 +12,7 @@
 +*/
 
 import {CheckBox} from "@web/core/checkbox/checkbox";
-import {CmisObjectCollection} from "../cmis_object_wrapper_service/cmis_object_wrapper_service";
+import {CmisObjectCollection} from "../cmis_object_wrapper_service";
 import {Dropdown} from "@web/core/dropdown/dropdown";
 import {DropdownItem} from "@web/core/dropdown/dropdown_item";
 import {Widget} from "@web/views/widgets/widget";
