@@ -11,7 +11,7 @@
     "license": "AGPL-3",
     "price": 400,
     "currency": "EUR",
-    "depends": ["web", "cmis_field"],
+    "depends": ["web", "cmis_field", "cmis_alf"],
     "images": ["static/description/main_icon.png"],
     "assets": {
         "web.assets_backend": [
