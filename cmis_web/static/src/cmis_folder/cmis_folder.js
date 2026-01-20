@@ -7,6 +7,7 @@ import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import {CmisBreadcrumbs} from "../cmis_breadcrumbs/cmis_breadcrumbs";
 import {CmisTable} from "../cmis_table/cmis_table";
 import {useService} from "@web/core/utils/hooks";
+import { rpc } from "@web/core/network/rpc";
 
 
 export class CmisFolderField extends Component {
@@ -28,13 +29,13 @@ export class CmisFolderField extends Component {
     };
     static defaultProps = {
         backend: null,
-        allowCreate: false,
+        allowCreate: true,
     };
 
     setup() {
         this.orm = useService("orm");
         onWillStart(async () => {
-            this.backend = await this.orm.call(
+            this.props.backend = await this.orm.call(
                 "cmis.backend",
                 "get_cmis_repository_from_js",
                 []);
@@ -61,6 +62,7 @@ export class CmisFolderField extends Component {
         this.initCmisSession();
 
         onWillRender(async () => {
+            console.log("on will render");
             this.state.value = this.props.value;
             await this.setRootFolderId();
         });
@@ -175,7 +177,7 @@ export class CmisFolderField extends Component {
             });
             return;
         }
-        const cmisFolderValue = await this.rpc("/web/cmis/field/create_value", {
+        const cmisFolderValue = await rpc("/web/cmis/field/create_value", {
             model_name: this.props.record.resModel,
             res_id: this.props.record.data.id,
             field_name: this.props.name,
