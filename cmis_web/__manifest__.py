@@ -14,6 +14,10 @@
     "depends": ["web", "cmis_field", "cmis_alf"],
     "images": ["static/description/main_icon.png"],
     "assets": {
+        "web.assets_web": [
+            "cmis_web/static/src/cmis_login_dialog/cmis_login_dialog.js",
+            "cmis_web/static/src/cmis_login_dialog/cmis_login_dialog.xml",
+          ],
         "web.assets_backend": [
             "/cmis_web/static/lib/cmisjs/superagent.7.2.0.js",
             "/cmis_web/static/lib/cmisjs/cmis.0.3.1.js",
@@ -39,6 +43,8 @@
             "/cmis_web/static/src/cmis_attachment_viewer/cmis_attachment_viewer.js",
             "/cmis_web/static/src/cmis_attachment_viewer/cmis_attachment_viewer.xml",
             "/cmis_web/static/src/cmis_object_wrapper_service.js",
+            "/cmis_web/static/src/cmis_login_dialog/cmis_login_dialog.js",
+            "/cmis_web/static/src/cmis_login_dialog/cmis_login_dialog.xml",
         ]
     },
 }

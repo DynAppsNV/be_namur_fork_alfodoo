@@ -12,26 +12,13 @@ import {patch} from "@web/core/utils/patch";
 
 patch(CmisObjectWrapper.prototype, {
     setup(cmisObject, cmisSession, params) {
-        this._super(...arguments);
         this.alfrescoApiLocation = params.alfrescoApiLocation;
     },
 
     getPreviewUrl() {
-        var _url = this._super(...arguments);
-        if (_url) {
-            return _url;
-        }
-        // By default, review are generated in alfresco the first time it's requested by share
-        // Before this first access, the renditions on the cmis object is empty.
-        // Use the alfresco API to trigger a first rendition of the document.
-        return (
-            this.alfrescoApiLocation +
-            "/node/workspace/SpacesStore/" +
-            this.versionSeriesId +
-            "/content/thumbnails/pdf/" +
-            encodeURI(this.name) +
-            "?c=force&lastModified=pdf%" +
-            new Date().getUTCMilliseconds()
-        );
+        const base = "/cmis/proxy/";
+        const objectId = encodeURIComponent(this.objectId || this.versionSeriesId);
+
+        return `${base}root?cmisselector=content&objectId=${objectId}&download=attachment`;
     },
 });

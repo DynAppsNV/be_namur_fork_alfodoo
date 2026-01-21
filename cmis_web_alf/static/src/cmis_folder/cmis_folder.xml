@@ -5,17 +5,17 @@
         t-inherit="cmis_web.CmisFolderField"
         t-inherit-mode="extension"
     >
-<!--        <xpath expr="//div[@class='btn-group']" position="after">-->
-<!--            <button-->
-<!--                type="button"-->
-<!--                class="btn btn-outline-primary mb-2 ms-2"-->
-<!--                data-toggle="tooltip"-->
-<!--                title="Show in Alfresco"-->
-<!--                aria-label="Show in Alfresco"-->
-<!--                t-on-click="onClickOpenInAlf"-->
-<!--            >-->
-<!--                <i class="alf-ico" />-->
-<!--            </button>-->
-<!--        </xpath>-->
+        <xpath expr="//div[@class='btn-group']" position="after">
+            <button
+                type="button"
+                class="btn btn-outline-primary mb-2 ms-2"
+                data-toggle="tooltip"
+                title="Show in Alfresco"
+                aria-label="Show in Alfresco"
+                t-on-click="onClickOpenInAlf"
+            >
+                <i class="alf-ico" />
+            </button>
+        </xpath>
     </t>
 </templates>

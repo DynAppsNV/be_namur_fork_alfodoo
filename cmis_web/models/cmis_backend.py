@@ -14,4 +14,5 @@ class CmisBackend(models.Model):
     def get_cmis_repository_from_js(self):
         """Return the default repository in the CMIS container"""
         backend = self._get_current_backend()
-        return self._get_web_description(backend)
+        cmis_container = self._get_web_description(backend)
+        return cmis_container

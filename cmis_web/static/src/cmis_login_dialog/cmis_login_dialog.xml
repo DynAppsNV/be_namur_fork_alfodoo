@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+  <t t-name="cmis_web.CmisLoginDialog">
+      <Dialog title="'Connexion Alfresco'" size="'md'">
+    <div class="p-3">
+      <h4 class="mb-3">Connection Alfresco</h4>
+
+      <form t-on-submit="onSubmit">
+        <div class="mb-2">
+          <label class="form-label">Login</label>
+          <input class="form-control" type="text" t-model="state.username" autocomplete="username"/>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input class="form-control" type="password" t-model="state.password" autocomplete="current-password"/>
+        </div>
+
+        <div t-if="state.error" class="alert alert-danger py-2">
+          <t t-esc="state.error"/>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+          <button class="btn btn-primary" type="submit" t-att-disabled="state.loading">
+            <t t-if="!state.loading">Login</t>
+            <t t-else="">Connexion…</t>
+          </button>
+        </div>
+      </form>
+    </div>
+<!--      <t t-set-slot="footer">-->
+<!--      <button class="btn btn-primary" t-on-click="onSubmit">Se connecter</button>-->
+<!--      <button class="btn btn-secondary" t-on-click="props.close">Annuler</button>-->
+<!--    </t>-->
+      </Dialog>
+  </t>
+</templates>

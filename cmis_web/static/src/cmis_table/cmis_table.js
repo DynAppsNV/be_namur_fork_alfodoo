@@ -17,10 +17,11 @@ import {Dropdown} from "@web/core/dropdown/dropdown";
 import {DropdownItem} from "@web/core/dropdown/dropdown_item";
 import {Widget} from "@web/views/widgets/widget";
 import {Component, useState} from "@odoo/owl";
+import { CmisActions } from "@cmis_web/cmis_actions/cmis_actions";
 
 export class CmisTable extends Component {
     static template = "cmis_web.CmisTable";
-    static components = {DropdownItem, CheckBox, Dropdown, Widget};
+    static components = {DropdownItem, CheckBox, Dropdown, Widget, CmisActions};
 
     setup() {
         this.allColumns = this.getAllColumns();
@@ -183,8 +184,8 @@ export class CmisTable extends Component {
         return false;
     }
 
-    getRowClass() {
-        return "";
+    getRowClass(cmisObject) {
+        return cmisObject.classMapper['name'];
     }
 
     getColumns() {
@@ -253,5 +254,6 @@ export const cmisTableProps = {
     renameObject: Function,
     updateDocumentContent: Function,
     deleteObject: Function,
+    openInAlf: Function,
 };
 CmisTable.props = cmisTableProps;

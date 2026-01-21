@@ -7,13 +7,26 @@ import {formatDateTime} from "@web/core/l10n/dates";
 
 export class CmisObjectWrapper {
     constructor(cmisObject, cmisSession, params) {
-        this.setup(cmisObject, cmisSession, params);
-    }
-
-    setup(cmisObject, cmisSession) {
         this.cmisObject = cmisObject;
         this.cmisSession = cmisSession;
         this.parseObject(cmisObject);
+        this.columnMapper = {
+            name: "  " + this.name,
+            title: this.title,
+            description: this.description,
+            lastModificationDate: this.fLastModificationDate(),
+            creationDate: this.fCreationDate(),
+            lastModifiedBy: this.lastModifiedBy,
+        };
+        this.classMapper = {
+            name: this.fNameClass(),
+        };
+        // this.setup(cmisObject, cmisSession, params);
+    }
+
+    setup(cmisObject, cmisSession, params) {
+        this.cmisObject = cmisObject;
+        this.cmisSession = cmisSession;
         this.columnMapper = {
             name: "  " + this.name,
             title: this.title,
@@ -132,22 +145,18 @@ export class CmisObjectWrapper {
             return "";
         }
 
-        // Option 1: Utiliser formatDateTime d'Odoo (recommandé)
         try {
             return formatDateTime(cmisTimestamp);
         } catch (e) {
-            // Fallback si formatDateTime ne fonctionne pas
-            console.warn("formatDateTime failed, using fallback", e);
+
         }
 
-        // Option 2: Fallback avec formatage manuel
         try {
             const date = new Date(cmisTimestamp);
             const dateFormat = localization.dateFormat || "MM/dd/yyyy";
             const timeFormat = localization.timeFormat || "HH:mm:ss";
 
-            // Utiliser Intl.DateTimeFormat si disponible
-            const locale = localization.code || "en-US";
+            const locale = localization.code || "en_US";
             return new Intl.DateTimeFormat(locale, {
                 year: 'numeric',
                 month: '2-digit',
@@ -157,7 +166,7 @@ export class CmisObjectWrapper {
                 second: '2-digit'
             }).format(date);
         } catch (e) {
-            console.error("Date formatting failed", e);
+            // console.warn("Date formatting failed", e);
             return cmisTimestamp.toString();
         }
     }

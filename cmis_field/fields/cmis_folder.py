@@ -8,7 +8,7 @@ from operator import attrgetter
 
 from cmislib.exceptions import ObjectNotFoundException
 
-from odoo import SUPERUSER_ID, api, fields
+from odoo import SUPERUSER_ID, api, fields, _
 from odoo.exceptions import UserError
 from odoo.modules.registry import Registry
 from odoo.tools.sql import pg_varchar
@@ -173,7 +173,6 @@ class CmisFolder(fields.Field):
             name = backend.get_unique_folder_name(name, parent)
             props = properties[record.id] or {}
             value = repo.createFolder(parent, name, props)
-
             def clean_up_folder(cmis_object_id, backend_id, dbname):
                 db_registry = Registry(dbname)
                 with db_registry.cursor() as cr:
@@ -206,7 +205,7 @@ class CmisFolder(fields.Field):
     def _check_null(self, record, raise_exception=True):
         val = self.__get__(record, record)
         if val and raise_exception:
-            raise UserError(self.env._("A value is already assigned to %s", self))
+            raise UserError(_("A value is already assigned to %s", self))
         return val
 
     def get_create_names(self, records, backend):

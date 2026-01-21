@@ -1,6 +1,5 @@
 /** @odoo-module **/
 
-import { Component, useState, useRef, onWillRender, onWillStart } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
@@ -8,38 +7,48 @@ import {CmisBreadcrumbs} from "../cmis_breadcrumbs/cmis_breadcrumbs";
 import {CmisTable} from "../cmis_table/cmis_table";
 import {useService} from "@web/core/utils/hooks";
 import { rpc } from "@web/core/network/rpc";
-
+import { WarningDialog } from "@web/core/errors/error_dialogs";
+import {UpdateDocumentContentDialog} from "../update_document_content_dialog/update_document_content_dialog";
+import {RenameDialog} from "../rename_dialog/rename_dialog";
+import {sprintf} from "@web/core/utils/strings";
+import {ConfirmationDialog} from "@web/core/confirmation_dialog/confirmation_dialog";
+import { CmisLoginDialog } from "@cmis_web/cmis_login_dialog/cmis_login_dialog";
+const {Component, onWillRender, useRef, useState, onWillStart} = owl;
 
 export class CmisFolderField extends Component {
     static template = "cmis_web.CmisFolderField";
     static components = {CmisBreadcrumbs, CmisTable};
     static props = {
         ...standardFieldProps,
-        allowCreate: { type: Boolean, optional: true },
-        backend: {
-          type: Object,
-          optional: true,
-          shape: {
-            id: { type: Number, optional: true },
-            location: { type: String, optional: true },
-            name: { type: String, optional: true },
-            backend_error: { type: String, optional: true },
-          },
+        allowCreate: {type: Boolean, optional: true},
+        backend_cmis: {
+            type: Object,
+            optional: true,
+            shape: {
+                id: {type: Number, optional: true},
+                location: {type: String, optional: true},
+                name: {type: String, optional: true},
+                share_location: {type: String, optional: true},
+                alfresco_api_location: {type: String, optional: true},
+                backend_error: {type: String, optional: true},
+            },
         },
     };
     static defaultProps = {
-        backend: null,
+        backend_cmis: null,
         allowCreate: true,
     };
 
     setup() {
-        this.orm = useService("orm");
-        onWillStart(async () => {
-            this.props.backend = await this.orm.call(
-                "cmis.backend",
-                "get_cmis_repository_from_js",
-                []);
-        });
+        // Instance all fields/service/ref
+        this.buttonCreateFolderRef = useRef("buttonCreateFolder");
+        this.cmisObjectWrapperService = useService("cmisObjectWrapperService");
+        this.dialogService = useService("dialog");
+        this.ui = useService("ui");
+        this.cmisSession = null;
+        this.rootFolderId = null;
+        this.displayFolderId = null;
+        this.alfUser = null;
         this.state = useState({
             value: this.props.value,
             cmisObjectsWrap: [],
@@ -47,36 +56,82 @@ export class CmisFolderField extends Component {
             parentFolders: [],
             allowableActions: {},
         });
-        this.buttonCreateFolderRef = useRef("buttonCreateFolder");
-        this.cmisObjectWrapperService = useService("cmisObjectWrapperService");
-        this.dialogService = useService("dialog");
-        this.ui = useService("ui");
-        this.backend = this.props.backend || null;
-
-        this.cmisSession = null;
-        this.rootFolderId = null;
-        this.displayFolderId = null;
-
         this.dragCount = 0;
+        this.orm = useService("orm");
 
-        this.initCmisSession();
+        // Get informations from cmis.backend + Create first session
+        onWillStart(async () => {
+            this.loadSessionInfo();
+            // await this.ensureAlfrescoAuth();
+            this.props.backend_cmis = await this.orm.call(
+                "cmis.backend",
+                "get_cmis_repository_from_js",
+                []);
+            this.backend_cmis = this.props.backend_cmis;
+            await this.initCmisSession();
+        });
 
+        // Set First repository and fill value
         onWillRender(async () => {
-            console.log("on will render");
-            this.state.value = this.props.value;
+            this.state.value = this.props.record.data;
             await this.setRootFolderId();
         });
     }
 
+    async loadSessionInfo() {
+      const res = await rpc("/cmis/session_info", {});
+      this.alfUser = res?.alf_user || null;
+    }
+
+    async ensureAlfrescoAuth() {
+        if (!this.dialogService) return;
+
+      await new Promise((resolve) => {
+        const close = this.dialogService.add(CmisLoginDialog, {
+          onSuccess: async () => {
+            close();
+            await this.reloadAfterLogin();
+            resolve();
+          },
+        }, {
+          title: "Connexion Alfresco",
+        });
+      });
+    }
+
+    async reloadAfterLogin() {
+        await this.setRootFolderId();
+        await this.loadSessionInfo();
+        if (this.displayFolderId) {
+            await this.displayFolder({ name: "Current", id: this.displayFolderId });
+        } else if (this.rootFolderId) {
+            await this.displayFolder({ name: "Root", id: this.rootFolderId });
+        } else if (this.props?.id) {
+            await this.displayFolder({ name: "Root", id: this.props.id });
+        }
+    }
+
+    async logoutAlfresco() {
+        await rpc("/cmis/logout", {});
+        this.state.cmisObjectsWrap = [];
+        this.state.parentFolders = [];
+        this.displayFolderId = null;
+        this.alfUser = null;
+        await this.setRootFolderId();
+    }
+
     initCmisSession() {
-        if (this.backend?.backend_error) {
+        if (this.backend_cmis?.backend_error) {
             this.dialogService.add(WarningDialog, {
                 title: "CMIS Error",
-                message: this.backend.backend_error,
+                message: this.backend_cmis.backend_error,
             });
             return;
         }
-        this.cmisSession = cmis.createSession(this.backend?.location);
+
+        const proxyUrl = "/cmis/proxy/";
+
+        this.cmisSession = cmis.createSession(proxyUrl);
         this.cmisSession.setGlobalHandlers(
             this.onCmisError.bind(this),
             this.onCmisError.bind(this)
@@ -85,40 +140,58 @@ export class CmisFolderField extends Component {
     }
 
     get dynamicProps() {
-        const props = {
-            list: this.state.cmisObjectsWrap,
-            deleteObject: this.deleteObject.bind(this),
-            renameObject: this.renameObject.bind(this),
-            updateDocumentContent: this.updateDocumentContent.bind(this),
+        return {
+            list: this.this.state.cmisObjectsWrap || [],
+            deleteObject: this.deleteObject.bind(this.this),
+            renameObject: this.renameObject.bind(this.this),
+            updateDocumentContent: this.updateDocumentContent.bind(this.this),
+            openInAlf: this.open,
         };
-        return props;
+    }
+
+    sortBy(fieldName) {
+      const current = (this.state.orderBy || [])[0];
+      const asc = !(current && current.name === fieldName && current.asc);
+
+      this.state.orderBy = [{ name: fieldName, asc }];
+
+      const arr = [...(this.state.cmisObjectsWrap || [])];
+      arr.sort((a, b) => {
+        const va = (a.columnMapper?.[fieldName] ?? a[fieldName] ?? "").toString();
+        const vb = (b.columnMapper?.[fieldName] ?? b[fieldName] ?? "").toString();
+        return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+      });
+      this.state.cmisObjectsWrap = arr;
     }
 
     async setRootFolderId() {
-        if (this.rootFolderId === this.state.value) {
+        console.log(this.rootFolderId);
+        if (this.rootFolderId === this.state.value.cmis_folder) {
             return;
         }
-        this.rootFolderId = this.state.value;
-
+        this.rootFolderId = this.state.value.cmis_folder;
         if (!this.rootFolderId) {
             return;
         }
-
-        var self = this;
-        const loadCmisRepositories = new Promise(function (resolve, reject) {
-            if (self.cmisSession.repositories) {
-                resolve();
+        if (!this.cmisSession) {
+            this.initCmisSession();
+        }
+        try {
+            if (!this.cmisSession.repositories) {
+                await new Promise((resolve, reject) => {
+                    this.cmisSession
+                        .loadRepositories()
+                        .ok(resolve)
+                        .notOk(reject);
+                });
             }
-            self.cmisSession
-                .loadRepositories()
-                .ok(() => resolve())
-                .notOk((error) => reject(error));
-        });
+            this.state.parentFolders = [];
+            this.displayFolder({name: "Root", id: this.rootFolderId});
+        } catch (error) {
+            this.onCmisError(error);
+        }
 
-        this.state.parentFolders = [];
-        loadCmisRepositories.then(() =>
-            this.displayFolder({name: "Root", id: this.rootFolderId})
-        );
+
     }
 
     getCmisObjectWrapperParams() {
@@ -126,7 +199,6 @@ export class CmisFolderField extends Component {
     }
 
     async queryCmisData() {
-        let self = this;
         if (!this.displayFolderId) {
             return;
         }
@@ -134,39 +206,51 @@ export class CmisFolderField extends Component {
             includeAllowableActions: true,
             renditionFilter: "application/pdf",
         };
-        const cmisObjectsData = await new Promise((resolve) => {
-            self.cmisSession
-                .getChildren(self.displayFolderId, options)
-                .ok(function (data) {
-                    resolve(data);
-                });
-        });
-        const params = this.getCmisObjectWrapperParams();
-        this.state.cmisObjectsWrap = this.cmisObjectWrapperService.wrap(
-            cmisObjectsData.objects,
-            this.cmisSession,
-            params
-        );
+        let cmisObjectsData;
+        try {
+            if (!this.cmisSession) {
+                this.initCmisSession();
+            }
+            cmisObjectsData = await new Promise((resolve, reject) => {
+                this.cmisSession
+                    .getChildren(this.displayFolderId, options)
+                    .ok(resolve)
+                    .notOk(reject);
+            });
+            const params = this.getCmisObjectWrapperParams();
+            this.state.cmisObjectsWrap = this.cmisObjectWrapperService.wrap(
+                cmisObjectsData.objects,
+                this.cmisSession,
+                params
+            );
+        } catch (e) {
+            this.onCmisError(e);
+        }
     }
 
-    async displayFolder(folder){
+
+    async displayFolder(folder) {
         if (this.displayFolderId === folder.id) {
             return;
         }
         this.displayFolderId = folder.id;
-        var self = this;
-        const cmisFolderData = await new Promise((resolve) => {
-            self.cmisSession
-                .getObject(self.displayFolderId, "latest", {
-                    includeAllowableActions: true,
-                })
-                .ok(function (data) {
-                    resolve(data);
-                });
-        });
-        this.state.allowableActions = cmisFolderData.allowableActions;
-        this.queryCmisData();
-        this.updateParentFolders(folder);
+        if (!this.cmisSession) {
+            this.initCmisSession();
+        }
+        try {
+            const cmisFolderData = await new Promise((resolve, reject) => {
+                this.cmisSession
+                    .getObject(this.displayFolderId, "latest", {includeAllowableActions: true})
+                    .ok(resolve)
+                    .notOk(reject);
+            });
+            this.state.allowableActions = cmisFolderData.allowableActions;
+            this.queryCmisData();
+            this.updateParentFolders(folder);
+        } catch (e) {
+            this.onCmisError(e);
+        }
+
     }
 
     async createRootFolder() {
@@ -179,7 +263,7 @@ export class CmisFolderField extends Component {
         }
         const cmisFolderValue = await rpc("/web/cmis/field/create_value", {
             model_name: this.props.record.resModel,
-            res_id: this.props.record.data.id,
+            res_id: this.props.record.evalContext.id,
             field_name: this.props.name,
         });
         await this.props.record.load();
@@ -188,12 +272,12 @@ export class CmisFolderField extends Component {
     }
 
     onCmisError(error) {
-        this.unblockUI();
         if (error) {
-            this.dialogService.add(WarningDialog, {
-                title: "CMIS Error",
-                message: error.body.message,
-            });
+            console.log(error.body?.message || 'No message');
+            // this.orm.call("dialog", "add", WarningDialog, {
+            //     title: "CMIS Error",
+            //     message: error.body.message,
+            // });
         }
     }
 
@@ -201,9 +285,9 @@ export class CmisFolderField extends Component {
         var self = this;
         var numFiles = files.length;
         const processedFiles = [];
-        if (numFiles > 0) {
-            this.blockUI();
-        }
+        // if (numFiles > 0) {
+        //     this.blockUI();
+        // }
         Array.prototype.forEach.call(files, (file) => {
             // FileList is not an Array but conform to its contract
             self.cmisSession
@@ -217,13 +301,13 @@ export class CmisFolderField extends Component {
                     processedFiles.push(data);
                     if (processedFiles.length === numFiles) {
                         self.queryCmisData();
-                        this.unblockUI();
+                        // this.unblockUI();
                     }
                 })
                 .notOk(function (error) {
                     if (error) {
                         self.onCmisError(error);
-                        this.unblockUI();
+                        // this.unblockUI();
                     }
                 });
         });
@@ -326,7 +410,7 @@ export class CmisFolderField extends Component {
         this.blockUI();
         this.cmisSession.createFolder(this.displayFolderId, folderName).ok(function () {
             self.queryCmisData();
-            this.unblockUI();
+            // this.unblockUI();
         });
     }
 
@@ -361,7 +445,7 @@ export const CmisFolderFieldComponent = {
     displayName: _t("CMIS folder"),
     supportedTypes: ["cmis_folder"],
     extractProps: (fieldInfo) => ({
-        backend: fieldInfo.options?.backend ?? fieldInfo.backend,
+        backend_cmis: fieldInfo.options?.backend_cmis ?? fieldInfo.backend_cmis,
         allowCreate: fieldInfo.options?.allow_create ?? fieldInfo.allow_create,
     }),
 
@@ -373,7 +457,7 @@ CmisFolderField.supportedTypes = ["cmis_folder"];
 
 CmisFolderField.extractProps = ({ field }) => {
     return {
-        backend: field.backend,
+        backend_cmis: field.backend_cmis,
         allowCreate: field.allow_create,
     };
 };

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
     <t t-name="cmis_web.CmisFolderField">
-        <t t-if="props.backend">
+        <t t-if="props.backend_cmis">
             <t t-if="props.record.resId">
                 <t t-if="!state.value and props.allowCreate">
                     <div class="mb-4">
@@ -10,23 +10,21 @@
                             type="button"
                             t-ref="buttonCreateFolder"
                             class="btn btn-primary hidden"
-                            t-on-click="createRootFolder"
-                        >
+                            t-on-click="createRootFolder">
                             Create folder in DMS
                         </button>
                     </div>
                 </t>
                 <t t-if="state.value">
-                    <div class="btn-toolbar">
+                    <div class="btn-toolbar" t-if="alfUser">
                         <button
                             type="button"
                             class="btn btn-outline-primary mb-2 me-2"
                             data-toggle="tooltip"
                             title="Refresh content table"
                             aria-label="Refresh content table"
-                            t-on-click="queryCmisData"
-                        >
-                            <i class="fa fa-refresh" />
+                            t-on-click="queryCmisData">
+                            <i class="fa fa-refresh"/>
                         </button>
                         <div class="btn-group">
                             <button
@@ -36,9 +34,8 @@
                                 data-toggle="tooltip"
                                 title="Create folder"
                                 aria-label="Create folder"
-                                t-on-click="onClickCreateFolder"
-                            >
-                                <i class="fa fa-folder" />
+                                t-on-click="onClickCreateFolder">
+                                <i class="fa fa-folder"/>
                             </button>
                             <button
                                 type="button"
@@ -47,23 +44,44 @@
                                 data-toggle="tooltip"
                                 title="Add document"
                                 aria-label="Add document"
-                                t-on-click="onClickAddDocument"
-                            >
-                                <i class="fa fa-file" />
+                                t-on-click="onClickAddDocument">
+                                <i class="fa fa-file"/>
                             </button>
                         </div>
                     </div>
-                    <CmisBreadcrumbs
-                        parentFolders="state.parentFolders"
-                        displayFolder.bind="displayFolder"
-                    />
+                    <t t-if="alfUser">
+                        <div class="d-flex align-items-center gap-2" style="margin-bottom: 10px;">
+                          <span class="rounded-circle bg-success" style="width:10px;height:10px;"></span>
+                            <span class="text-muted small">
+                            Connected as <strong><t t-esc="alfUser"/></strong>
+                          </span>
+                        </div>
+                        <button
+                        type="button"
+                        class="btn btn-outline-primary mb-2"
+                        title="Deconnection"
+                        aria-label="Deconnection"
+                        t-on-click="logoutAlfresco">
+                            Deconnection
+                            </button>
+                        </t>
+                    <t t-if="!alfUser">
+                        <button
+                            type="button"
+                            class="btn btn-outline-primary mb-2"
+                            title="Connection"
+                            aria-label="Connection"
+                            t-on-click="ensureAlfrescoAuth">
+                        Connection
+                        </button>
+                    </t>
+                    <CmisBreadcrumbs parentFolders="state.parentFolders" displayFolder.bind="displayFolder"/>
                     <div
                         t-on-drop="ev => this.onDrop(ev)"
                         t-on-dragenter="ev => this.onDragenter(ev)"
                         t-on-dragleave="ev => this.onDragleave(ev)"
-                        t-att-class="{ 'o-dragging-inside': state.isDraggingInside }"
-                    >
-                        <CmisTable t-props="dynamicProps" displayFolder.bind="displayFolder" />
+                        t-att-class="{'o-dragging-inside': state.isDraggingInside }">
+                        <CmisTable t-props="dynamicProps" displayFolder.bind="displayFolder"/>
                     </div>
                 </t>
             </t>
