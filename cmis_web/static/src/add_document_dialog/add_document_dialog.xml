@@ -5,10 +5,10 @@
             <input
                 type="file"
                 class="form-control"
-                multiple="true"
+                multiple="multiple"
                 t-ref="filesInput"
             />
-            <t t-set-slot="footer" owl="1">
+            <t t-set-slot="footer">
                 <button class="btn btn-primary" t-on-click="onConfirm">Add</button>
                 <button class="btn btn-secondary" t-on-click="onClose">Close</button>
             </t>

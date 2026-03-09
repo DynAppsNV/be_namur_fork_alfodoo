@@ -144,30 +144,30 @@ export class CmisObjectWrapper {
         if (!cmisTimestamp) {
             return "";
         }
-
+        // Alfresco timestamps are milliseconds since epoch (integer).
+        // formatDateTime expects a Luxon DateTime, so convert first.
+        // luxon is available as a global (not an ES module in Odoo's bundle).
         try {
-            return formatDateTime(cmisTimestamp);
+            const dt = luxon.DateTime.fromMillis(cmisTimestamp);
+            if (!dt.isValid) {
+                throw new Error(dt.invalidReason);
+            }
+            return formatDateTime(dt);
         } catch (e) {
-
-        }
-
-        try {
-            const date = new Date(cmisTimestamp);
-            const dateFormat = localization.dateFormat || "MM/dd/yyyy";
-            const timeFormat = localization.timeFormat || "HH:mm:ss";
-
-            const locale = localization.code || "en_US";
-            return new Intl.DateTimeFormat(locale, {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            }).format(date);
-        } catch (e) {
-            // console.warn("Date formatting failed", e);
-            return cmisTimestamp.toString();
+            // Fallback: use Intl with a BCP 47 locale (Odoo uses underscores, e.g. "fr_BE")
+            try {
+                const locale = (localization.code || "en_US").replace("_", "-");
+                return new Intl.DateTimeFormat(locale, {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                }).format(new Date(cmisTimestamp));
+            } catch (e2) {
+                return String(cmisTimestamp);
+            }
         }
     }
 

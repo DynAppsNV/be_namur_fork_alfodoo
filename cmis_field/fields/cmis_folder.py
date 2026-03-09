@@ -219,7 +219,7 @@ class CmisFolder(fields.Field):
 
         """
         if self.create_name_get == "name_get":
-            return dict(records.name_get())
+            return {record.id: record.display_name for record in records}
         fct = self.create_name_get
         if not callable(fct):
             fct = getattr(records, fct)

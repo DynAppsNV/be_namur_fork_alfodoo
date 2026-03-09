@@ -31,7 +31,7 @@ export class CmisTable extends Component {
         this.preventReorder = false;
     }
 
-    getAllColumns() {
+    "getAllColumns"() {
         return [
             {
                 id: 1,
