@@ -11,7 +11,6 @@ import {CmisAttachmentViewer} from "../cmis_attachment_viewer/cmis_attachment_vi
 import {CmisObjectWrapper} from "../cmis_object_wrapper_service";
 import {Dropdown} from "@web/core/dropdown/dropdown";
 import {DropdownItem} from "@web/core/dropdown/dropdown_item";
-import {cmisTableProps} from "../cmis_table/cmis_table";
 import {registry} from "@web/core/registry";
 import {useService} from "@web/core/utils/hooks";
 
@@ -20,8 +19,11 @@ const {Component} = owl;
 export class CmisActions extends Component {
     setup() {
         this.dialogService = useService("dialog");
-        this.allowableActions = this.props.cmisObject.allowableActions;
+        this.allowableActions = this.props.cmisObject?.allowableActions || {};
     }
+    // get allowableActions() {
+    //     return this.props.cmisObject?.allowableActions || {};
+    // }
 
     onClickDownload() {
         window.open(this.props.cmisObject.url);
@@ -30,7 +32,7 @@ export class CmisActions extends Component {
     onClickPreview() {
         this.dialogService.add(CmisAttachmentViewer, {
             cmisObject: this.props.cmisObject,
-            cmisFolderObjects: this.props.cmisFolderObjects,
+            cmisFolderObjects: this.props.cmisFolderObjects || [],
         });
     }
 
@@ -50,9 +52,15 @@ export class CmisActions extends Component {
 CmisActions.template = "cmis_web.CmisActions";
 CmisActions.components = {Dropdown, DropdownItem};
 CmisActions.props = {
-    ...cmisTableProps,
-    cmisObject: CmisObjectWrapper,
-    cmisFolderObjects: {type: Array, element: CmisObjectWrapper},
+    cmisObject: { type: CmisObjectWrapper },
+    cmisFolderObjects: { type: Array, element: CmisObjectWrapper },
+    renameObject: Function,
+    updateDocumentContent: Function,
+    deleteObject: Function,
 };
 
-registry.category("view_widgets").add("cmis_actions", CmisActions);
+export const CmisActionsComponent = {
+    component: CmisActions,
+};
+
+registry.category("view_widgets").add("cmis_actions", CmisActionsComponent);

@@ -1,26 +1,32 @@
 /** @odoo-module */
 
-/* ---------------------------------------------------------
-+ * Odoo cmis_web
-+ * Authors Laurent Mignon 2016, Quentin Groulard 2023 Acsone SA/NV
-+ * License in __openerp__.py at root level of the module
-+ *---------------------------------------------------------
-+*/
-
 import {localization} from "@web/core/l10n/localization";
-import {luxonToMomentFormat} from "@web/core/l10n/dates";
 import {registry} from "@web/core/registry";
 import {sortBy} from "@web/core/utils/arrays";
+import {formatDateTime} from "@web/core/l10n/dates";
 
 export class CmisObjectWrapper {
     constructor(cmisObject, cmisSession, params) {
-        this.setup(cmisObject, cmisSession, params);
-    }
-
-    setup(cmisObject, cmisSession) {
         this.cmisObject = cmisObject;
         this.cmisSession = cmisSession;
         this.parseObject(cmisObject);
+        this.columnMapper = {
+            name: "  " + this.name,
+            title: this.title,
+            description: this.description,
+            lastModificationDate: this.fLastModificationDate(),
+            creationDate: this.fCreationDate(),
+            lastModifiedBy: this.lastModifiedBy,
+        };
+        this.classMapper = {
+            name: this.fNameClass(),
+        };
+        // this.setup(cmisObject, cmisSession, params);
+    }
+
+    setup(cmisObject, cmisSession, params) {
+        this.cmisObject = cmisObject;
+        this.cmisSession = cmisSession;
         this.columnMapper = {
             name: "  " + this.name,
             title: this.title,
@@ -65,7 +71,7 @@ export class CmisObjectWrapper {
 
     getSuccinctProperty(property, cmisObject) {
         const object = cmisObject || this.cmisObject;
-        return object.succinctProperties[property];
+        return object.succinctProperties?.[property];
     }
 
     _getCssClass() {
@@ -110,12 +116,11 @@ export class CmisObjectWrapper {
      *
      **/
     fNameClass() {
-        var cls = this._getCssClass();
-        return cls;
+        return this._getCssClass();
     }
 
     /** FLastModificationDate
-     * @returns the cmis:mastModificationDate formatted to be rendered in ta datatable cell
+     * @returns the cmis:lastModificationDate formatted to be rendered in ta datatable cell
      *
      **/
     fLastModificationDate() {
@@ -136,14 +141,34 @@ export class CmisObjectWrapper {
     }
 
     formatCmisTimestamp(cmisTimestamp) {
-        if (cmisTimestamp) {
-            var d = new Date(cmisTimestamp);
-            var dateFormat = luxonToMomentFormat(localization.dateFormat);
-            var timeFormat = luxonToMomentFormat(localization.timeFormat);
-            var value = moment(d);
-            return value.format(dateFormat + " " + timeFormat);
+        if (!cmisTimestamp) {
+            return "";
         }
-        return "";
+        // Alfresco timestamps are milliseconds since epoch (integer).
+        // formatDateTime expects a Luxon DateTime, so convert first.
+        // luxon is available as a global (not an ES module in Odoo's bundle).
+        try {
+            const dt = luxon.DateTime.fromMillis(cmisTimestamp);
+            if (!dt.isValid) {
+                throw new Error(dt.invalidReason);
+            }
+            return formatDateTime(dt);
+        } catch (e) {
+            // Fallback: use Intl with a BCP 47 locale (Odoo uses underscores, e.g. "fr_BE")
+            try {
+                const locale = (localization.code || "en_US").replace("_", "-");
+                return new Intl.DateTimeFormat(locale, {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                }).format(new Date(cmisTimestamp));
+            } catch (e2) {
+                return String(cmisTimestamp);
+            }
+        }
     }
 
     getContentUrl() {
@@ -151,7 +176,9 @@ export class CmisObjectWrapper {
     }
 
     getPreviewUrl() {
-        var rendition = _.findWhere(this.renditions, {mimeType: "application/pdf"});
+        // Remplacer _.findWhere par find natif
+        const rendition = this.renditions?.find(r => r.mimeType === "application/pdf");
+
         if (this.mimetype === "application/pdf") {
             return this.getContentUrl();
         } else if (rendition) {
@@ -162,15 +189,11 @@ export class CmisObjectWrapper {
 
     getPreviewType() {
         if (this.baseTypeId === "cmis:folder") {
-            return undefined;
+            return;
         }
-        if (this.mimetype.match("(image)")) {
-            return "image";
-        }
-        if (this.mimetype.match("(video)")) {
-            return "video";
-        }
-        // Here we hope that alfresco is able to render the document as pdf
+        const type = this.mimetype?.split("/")[0];
+        if (type === "image") return "image";
+        if (type === "video") return "video";
         return "pdf";
     }
 }

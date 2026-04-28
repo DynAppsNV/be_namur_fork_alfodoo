@@ -16,21 +16,26 @@ export class AddDocumentDialog extends Component {
         this.filesInput = useRef("filesInput");
     }
 
-    async onClose() {
+    onClose() {
         this.props.close();
     }
 
     async onConfirm() {
+        const files = this.filesInput.el?.files;
+
         try {
-            await this.props.confirm(this.filesInput.el.files);
+            await this.props.confirm(files);
+            this.props.close();
         } catch (e) {
             this.props.close();
             throw e;
         }
-        this.props.close();
     }
 }
 
-AddDocumentDialog.components = {Dialog};
+AddDocumentDialog.components = { Dialog };
 AddDocumentDialog.template = "cmis_web.AddDocumentDialog";
-AddDocumentDialog.props = {confirm: Function, close: Function};
+AddDocumentDialog.props = {
+    confirm: Function,
+    close: Function,
+};

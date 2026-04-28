@@ -4,7 +4,6 @@
         t-name="cmis_web_alf.CmisFolderField"
         t-inherit="cmis_web.CmisFolderField"
         t-inherit-mode="extension"
-        owl="1"
     >
         <xpath expr="//div[@class='btn-group']" position="after">
             <button

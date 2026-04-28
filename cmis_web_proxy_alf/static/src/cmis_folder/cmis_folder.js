@@ -13,9 +13,9 @@ import {patch} from "@web/core/utils/patch";
 patch(CmisFolderField.prototype, "open_with_proxy_alf", {
     getCmisObjectWrapperParams() {
         const params = this._super(...arguments);
-        params.alfrescoApiLocation = this.backend.alfresco_api_location;
+        params.alfrescoApiLocation = this.backend_cmis.alfresco_api_location;
         return params;
     },
 });
 
-CmisFolderField.props.backend[0].shape.alfresco_api_location = String;
+CmisFolderField.props.backend_cmis[0].shape.alfresco_api_location = String;

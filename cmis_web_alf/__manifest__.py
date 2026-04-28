@@ -7,7 +7,7 @@
     "category": "Document Management",
     "author": "ACSONE SA/NV",
     "website": "https://alfodoo.org",
-    "version": "16.0.1.0.0",
+    "version": "18.0.1.0.0",
     "license": "AGPL-3",
     "depends": ["cmis_alf", "cmis_web"],
     "data": [],
@@ -17,7 +17,7 @@
     "images": [
         "static/description/main_icon.png",
     ],
-    "installable": False,
+    "installable": True,
     "assets": {
         "web.assets_backend": [
             "/cmis_web_alf/static/src/images/images.scss",

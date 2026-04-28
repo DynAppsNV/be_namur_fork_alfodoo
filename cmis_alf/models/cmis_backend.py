@@ -66,9 +66,7 @@ class CmisBackend(models.Model):
         """
         return alf_noderef.split("/")[-1]
 
-    def create_cmis_folder_from_template(
-        self, source_objectid, parent_objectid, name, title=None, description=None
-    ):
+    def create_cmis_folder_from_template(self, source_objectid, parent_objectid, name, title=None, description=None):
         """Create a new cmis folder from an alfresco space template."""
         self.ensure_one()
         payload = {

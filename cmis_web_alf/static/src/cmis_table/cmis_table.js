@@ -6,7 +6,14 @@
 + * License in __openerp__.py at root level of the module
 + *---------------------------------------------------------
 +*/
+import { CmisTable } from "@cmis_web/cmis_table/cmis_table";
+import {patch} from "@web/core/utils/patch";
 
-import {cmisTableProps} from "@cmis_web/cmis_table/cmis_table";
+patch(CmisTable.prototype,{
+  props: {
+    ...CmisTable.props,
+    openInAlf: { type: Function, optional: true },
+  },
+});
 
-cmisTableProps.openInAlf = Function;
+CmisTable.openInAlf = Function;

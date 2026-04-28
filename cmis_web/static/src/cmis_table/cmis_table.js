@@ -16,10 +16,13 @@ import {CmisObjectCollection} from "../cmis_object_wrapper_service";
 import {Dropdown} from "@web/core/dropdown/dropdown";
 import {DropdownItem} from "@web/core/dropdown/dropdown_item";
 import {Widget} from "@web/views/widgets/widget";
-
-const {Component, useState} = owl;
+import {Component, useState} from "@odoo/owl";
+import { CmisActions } from "@cmis_web/cmis_actions/cmis_actions";
 
 export class CmisTable extends Component {
+    static template = "cmis_web.CmisTable";
+    static components = {DropdownItem, CheckBox, Dropdown, Widget, CmisActions};
+
     setup() {
         this.allColumns = this.getAllColumns();
         this.state = useState({
@@ -28,7 +31,7 @@ export class CmisTable extends Component {
         this.preventReorder = false;
     }
 
-    getAllColumns() {
+    "getAllColumns"() {
         return [
             {
                 id: 1,
@@ -181,8 +184,8 @@ export class CmisTable extends Component {
         return false;
     }
 
-    getRowClass() {
-        return "";
+    getRowClass(cmisObject) {
+        return cmisObject.classMapper['name'];
     }
 
     getColumns() {
@@ -242,11 +245,8 @@ export class CmisTable extends Component {
     }
 }
 
-CmisTable.template = "cmis_web.CmisTable";
 CmisTable.rowsTemplate = "cmis_web.CmisTable.Rows";
 CmisTable.recordRowTemplate = "cmis_web.CmisTable.RecordRow";
-
-CmisTable.components = {DropdownItem, CheckBox, Dropdown, Widget};
 
 export const cmisTableProps = {
     list: [CmisObjectCollection, Array],
@@ -254,5 +254,6 @@ export const cmisTableProps = {
     renameObject: Function,
     updateDocumentContent: Function,
     deleteObject: Function,
+    openInAlf: Function,
 };
 CmisTable.props = cmisTableProps;
