@@ -51,10 +51,10 @@ export class CmisFolderField extends Component {
         this.cmisSession = null;
         this.rootFolderId = null;
         this.displayFolderId = null;
-        this.alfUser = null;
         this.state = useState({
             value: this.props.value,
             backend_cmis: null,
+            alfUser: null,
             cmisObjectsWrap: [],
             isDraggingInside: false,
             parentFolders: [],
@@ -97,7 +97,7 @@ export class CmisFolderField extends Component {
 
     async loadSessionInfo() {
         const res = await rpc("/cmis/session_info", {});
-        this.alfUser = res?.alf_user || null;
+        this.state.alfUser = res?.alf_user || null;
     }
 
     async ensureAlfrescoAuth() {
@@ -133,7 +133,7 @@ export class CmisFolderField extends Component {
         this.state.cmisObjectsWrap = [];
         this.state.parentFolders = [];
         this.displayFolderId = null;
-        this.alfUser = null;
+        this.state.alfUser = null;
         await this.setRootFolderId();
     }
 

@@ -2,21 +2,21 @@
 <templates xml:space="preserve">
     <t t-name="cmis_web.CmisFolderField">
         <t t-if="state.backend_cmis">
-            <t t-if="!alfUser">
+            <t t-if="!state.alfUser">
                 <button
                     type="button"
                     class="btn btn-outline-primary mb-2"
-                    title="Connection"
-                    aria-label="Connection"
+                    title="Login Alfresco"
+                    aria-label="Login Alfresco"
                     t-on-click="ensureAlfrescoAuth">
-                Connection
+                Login Alfresco
                 </button>
             </t>
-            <t t-if="alfUser">
+            <t t-if="state.alfUser">
                 <div class="d-flex align-items-center gap-2" style="margin-bottom: 10px;">
                   <span class="rounded-circle bg-success" style="width:10px;height:10px;"></span>
                     <span class="text-muted small">
-                    Connected as <strong><t t-esc="alfUser"/></strong>
+                    Connected as <strong><t t-esc="state.alfUser"/></strong>
                   </span>
                 </div>
                 <button
@@ -41,7 +41,7 @@
                         </div>
                     </t>
                     <t t-if="state.value.cmis_folder">
-                        <div class="btn-toolbar" t-if="alfUser">
+                        <div class="btn-toolbar" t-if="state.alfUser">
                             <button
                                 type="button"
                                 class="btn btn-outline-primary mb-2 me-2"
